@@ -13,7 +13,7 @@ import { Component } from '@wordpress/element';
  * Internal dependencies
  */
 import '../store';
-import withViewportMatch from '../with-viewport-match';
+import { default as withViewportMatch, ViewportMatchWidthProvider } from '../with-viewport-match';
 
 describe( 'withViewportMatch()', () => {
 	const ChildComponent = () => <div>Hello</div>;
@@ -30,14 +30,33 @@ describe( 'withViewportMatch()', () => {
 	};
 
 	it( 'should render with result of query as custom prop name', () => {
-		dispatch( 'core/viewport' ).setIsMatching( { '> wide': true } );
+		dispatch( 'core/viewport' ).setIsMatching( { '>= wide': true } );
 		const EnhancedComponent = withViewportMatch(
-			{ isWide: '> wide' }
+			{ isWide: '>= wide' }
 		)( ChildComponent );
 		const wrapper = renderer.create( getTestComponent( EnhancedComponent ) );
 
 		expect( wrapper.root.findByType( ChildComponent ).props.isWide )
 			.toBe( true );
+
+		wrapper.unmount();
+	} );
+
+	it( 'should correctly simulate a width', () => {
+		dispatch( 'core/viewport' ).setIsMatching( { '>= large': true } );
+		dispatch( 'core/viewport' ).setIsMatching( { '>= wide': true } );
+		const EnhancedComponent = withViewportMatch(
+			{ isWide: '>= wide', isLarge: '>= large' }
+		)( ChildComponent );
+		const wrapper = renderer.create(
+			<ViewportMatchWidthProvider value={ 1279 }>
+				{ getTestComponent( EnhancedComponent ) }
+			</ViewportMatchWidthProvider>
+		);
+
+		const propsPassed = wrapper.root.findByType( ChildComponent ).props;
+		expect( propsPassed.isWide ).toBe( false );
+		expect( propsPassed.isLarge ).toBe( true );
 
 		wrapper.unmount();
 	} );

@@ -314,6 +314,22 @@ _Related_
 
 -   <https://github.com/WordPress/gutenberg/blob/master/packages/block-editor/src/components/inspector-controls/README.md>
 
+<a name="LINK_DESTINATION_ATTACHMENT" href="#LINK_DESTINATION_ATTACHMENT">#</a> **LINK_DESTINATION_ATTACHMENT**
+
+Undocumented declaration.
+
+<a name="LINK_DESTINATION_CUSTOM" href="#LINK_DESTINATION_CUSTOM">#</a> **LINK_DESTINATION_CUSTOM**
+
+Undocumented declaration.
+
+<a name="LINK_DESTINATION_MEDIA" href="#LINK_DESTINATION_MEDIA">#</a> **LINK_DESTINATION_MEDIA**
+
+Undocumented declaration.
+
+<a name="LINK_DESTINATION_NONE" href="#LINK_DESTINATION_NONE">#</a> **LINK_DESTINATION_NONE**
+
+Undocumented declaration.
+
 <a name="MediaPlaceholder" href="#MediaPlaceholder">#</a> **MediaPlaceholder**
 
 _Related_
@@ -341,6 +357,10 @@ Undocumented declaration.
 Undocumented declaration.
 
 <a name="NavigableToolbar" href="#NavigableToolbar">#</a> **NavigableToolbar**
+
+Undocumented declaration.
+
+<a name="NEW_TAB_REL" href="#NEW_TAB_REL">#</a> **NEW_TAB_REL**
 
 Undocumented declaration.
 
@@ -413,6 +433,14 @@ _Properties_
 -   _\_\_experimentalEnableFullSiteEditingDemo_ `boolean`: Whether the user has enabled Full Site Editing Demo Templates
 
 <a name="SkipToSelectedBlock" href="#SkipToSelectedBlock">#</a> **SkipToSelectedBlock**
+
+Undocumented declaration.
+
+<a name="stopPropagation" href="#stopPropagation">#</a> **stopPropagation**
+
+Undocumented declaration.
+
+<a name="stopPropagationRelevantKeys" href="#stopPropagationRelevantKeys">#</a> **stopPropagationRelevantKeys**
 
 Undocumented declaration.
 

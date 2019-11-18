@@ -7,7 +7,10 @@ import {
 	filter,
 	find,
 	forEach,
+	get,
+	isEmpty,
 	map,
+	reduce,
 	some,
 } from 'lodash';
 
@@ -48,7 +51,7 @@ const linkOptions = [
 ];
 const ALLOWED_MEDIA_TYPES = [ 'image' ];
 
-class GalleryEdit extends Component {
+export class GalleryEdit extends Component {
 	constructor() {
 		super( ...arguments );
 
@@ -65,6 +68,8 @@ class GalleryEdit extends Component {
 		this.setImageAttributes = this.setImageAttributes.bind( this );
 		this.setAttributes = this.setAttributes.bind( this );
 		this.onFocusGalleryCaption = this.onFocusGalleryCaption.bind( this );
+		this.getImagesSizeOptions = this.getImagesSizeOptions.bind( this );
+		this.updateImagesSize = this.updateImagesSize.bind( this );
 
 		this.state = {
 			selectedImage: null,
@@ -159,7 +164,7 @@ class GalleryEdit extends Component {
 	}
 
 	onSelectImages( newImages ) {
-		const { columns, images } = this.props.attributes;
+		const { columns, images, sizeSlug } = this.props.attributes;
 		const { attachmentCaptions } = this.state;
 		this.setState(
 			{
@@ -171,7 +176,7 @@ class GalleryEdit extends Component {
 		);
 		this.setAttributes( {
 			images: newImages.map( ( newImage ) => ( {
-				...pickRelevantMediaFiles( newImage ),
+				...pickRelevantMediaFiles( newImage, sizeSlug ),
 				caption: this.selectCaption( newImage, images, attachmentCaptions ),
 			} ) ),
 			columns: columns ? Math.min( newImages.length, columns ) : columns,
@@ -224,6 +229,25 @@ class GalleryEdit extends Component {
 		} );
 	}
 
+	getImagesSizeOptions() {
+		const { imageSizes } = this.props;
+		return map( imageSizes, ( { name, slug } ) => ( { value: slug, label: name } ) );
+	}
+
+	updateImagesSize( sizeSlug ) {
+		const { attributes: { images }, resizedImages } = this.props;
+
+		const updatedImages = map( images, ( image ) => {
+			const url = get( resizedImages, [ parseInt( image.id, 10 ), sizeSlug ] );
+			return {
+				...image,
+				...( url && { url } ),
+			};
+		} );
+
+		this.setAttributes( { images: updatedImages, sizeSlug } );
+	}
+
 	componentDidMount() {
 		const { attributes, mediaUpload } = this.props;
 		const { images } = attributes;
@@ -263,6 +287,7 @@ class GalleryEdit extends Component {
 			imageCrop,
 			images,
 			linkTo,
+			sizeSlug,
 		} = attributes;
 
 		const hasImages = !! images.length;
@@ -299,6 +324,9 @@ class GalleryEdit extends Component {
 				'screen-reader-text': ! isSelected && RichText.isEmpty( caption ),
 			}
 		);
+
+		const imageSizeOptions = this.getImagesSizeOptions();
+
 		return (
 			<>
 				<InspectorControls>
@@ -323,6 +351,14 @@ class GalleryEdit extends Component {
 							onChange={ this.setLinkTo }
 							options={ linkOptions }
 						/>
+						{ hasImages && ! isEmpty( imageSizeOptions ) && (
+							<SelectControl
+								label={ __( 'Images Size' ) }
+								value={ sizeSlug }
+								options={ imageSizeOptions }
+								onChange={ this.updateImagesSize }
+							/>
+						) }
 					</PanelBody>
 				</InspectorControls>
 				{ noticeUI }
@@ -377,10 +413,38 @@ class GalleryEdit extends Component {
 	}
 }
 export default compose( [
-	withSelect( ( select ) => {
+	withSelect( ( select, { attributes: { ids } } ) => {
+		const { getMedia } = select( 'core' );
 		const { getSettings } = select( 'core/block-editor' );
-		const { mediaUpload } = getSettings();
-		return { mediaUpload };
+		const {
+			imageSizes,
+			mediaUpload,
+		} = getSettings();
+
+		const resizedImages = reduce(
+			ids,
+			( currentResizedImages, id ) => {
+				const image = getMedia( id );
+				const sizes = reduce( imageSizes, ( currentSizes, size ) => {
+					const defaultUrl = get( image, [ 'sizes', size.slug, 'url' ] );
+					const mediaDetailsUrl = get( image, [ 'media_details', 'sizes', size.slug, 'source_url' ] );
+					return {
+						...currentSizes,
+						[ size.slug ]: defaultUrl || mediaDetailsUrl,
+					};
+				}, {} );
+				return {
+					...currentResizedImages,
+					[ parseInt( id, 10 ) ]: sizes,
+				};
+			},
+			{} );
+
+		return {
+			imageSizes,
+			mediaUpload,
+			resizedImages,
+		};
 	} ),
 	withNotices,
 ] )( GalleryEdit );

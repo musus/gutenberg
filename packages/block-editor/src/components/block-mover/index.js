@@ -1,14 +1,14 @@
 /**
  * External dependencies
  */
-import { first, last, partial, castArray } from 'lodash';
+import { first, last, partial } from 'lodash';
 import classnames from 'classnames';
 
 /**
  * WordPress dependencies
  */
 import { __, sprintf } from '@wordpress/i18n';
-import { IconButton } from '@wordpress/components';
+import { IconButton, Toolbar } from '@wordpress/components';
 import { getBlockType } from '@wordpress/blocks';
 import { Component } from '@wordpress/element';
 import { withSelect, withDispatch } from '@wordpress/data';
@@ -18,7 +18,7 @@ import { withInstanceId, compose } from '@wordpress/compose';
  * Internal dependencies
  */
 import { getBlockMoverDescription } from './mover-description';
-import { leftArrow, rightArrow, upArrow, downArrow, dragHandle } from './icons';
+import { leftArrow, rightArrow, upArrow, downArrow } from './icons';
 import { IconDragHandle } from './drag-handle';
 
 export class BlockMover extends Component {
@@ -44,9 +44,9 @@ export class BlockMover extends Component {
 	}
 
 	render() {
-		const { onMoveUp, onMoveDown, __experimentalOrientation: orientation, isRTL, isFirst, isLast, isDraggable, onDragStart, onDragEnd, clientIds, blockElementId, blockType, firstIndex, isLocked, instanceId, isHidden, rootClientId } = this.props;
+		const { onMoveUp, onMoveDown, __experimentalOrientation: orientation, isRTL, isFirst, isLast, clientIds, blockType, firstIndex, isLocked, instanceId, isHidden, rootClientId } = this.props;
 		const { isFocused } = this.state;
-		const blocksCount = castArray( clientIds ).length;
+		const blocksCount = clientIds.length;
 		if ( isLocked || ( isFirst && isLast && ! rootClientId ) ) {
 			return null;
 		}
@@ -86,7 +86,7 @@ export class BlockMover extends Component {
 		// to an unfocused state (body as active element) without firing blur on,
 		// the rendering parent, leaving it unable to react to focus out.
 		return (
-			<div className={ classnames( 'editor-block-mover block-editor-block-mover', { 'is-visible': isFocused || ! isHidden, 'is-horizontal': orientation === 'horizontal' } ) }>
+			<Toolbar className={ classnames( 'editor-block-mover block-editor-block-mover', { 'is-visible': isFocused || ! isHidden, 'is-horizontal': orientation === 'horizontal' } ) }>
 				<IconButton
 					className="editor-block-mover__control block-editor-block-mover__control"
 					onClick={ isFirst ? null : onMoveUp }
@@ -99,13 +99,8 @@ export class BlockMover extends Component {
 					onBlur={ this.onBlur }
 				/>
 				<IconDragHandle
+					clientIds={ clientIds }
 					className="editor-block-mover__control block-editor-block-mover__control"
-					icon={ dragHandle }
-					clientId={ clientIds }
-					blockElementId={ blockElementId }
-					isVisible={ isDraggable }
-					onDragStart={ onDragStart }
-					onDragEnd={ onDragEnd }
 				/>
 				<IconButton
 					className="editor-block-mover__control block-editor-block-mover__control"
@@ -146,7 +141,7 @@ export class BlockMover extends Component {
 						)
 					}
 				</span>
-			</div>
+			</Toolbar>
 		);
 	}
 }
@@ -154,13 +149,12 @@ export class BlockMover extends Component {
 export default compose(
 	withSelect( ( select, { clientIds } ) => {
 		const { getBlock, getBlockIndex, getTemplateLock, getBlockRootClientId, getBlockOrder } = select( 'core/block-editor' );
-		const normalizedClientIds = castArray( clientIds );
-		const firstClientId = first( normalizedClientIds );
+		const firstClientId = first( clientIds );
 		const block = getBlock( firstClientId );
-		const rootClientId = getBlockRootClientId( first( normalizedClientIds ) );
+		const rootClientId = getBlockRootClientId( first( clientIds ) );
 		const blockOrder = getBlockOrder( rootClientId );
 		const firstIndex = getBlockIndex( firstClientId, rootClientId );
-		const lastIndex = getBlockIndex( last( normalizedClientIds ), rootClientId );
+		const lastIndex = getBlockIndex( last( clientIds ), rootClientId );
 		const { getSettings } = select( 'core/block-editor' );
 		const {
 			isRTL,

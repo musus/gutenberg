@@ -4,35 +4,31 @@
 import classnames from 'classnames';
 
 /**
+ * WordPress dependencies
+ */
+import { IconButton } from '@wordpress/components';
+
+/**
  * Internal dependencies
  */
 import BlockDraggable from '../block-draggable';
+import { dragHandle } from './icons';
 
-export const IconDragHandle = ( { isVisible, className, icon, onDragStart, onDragEnd, blockElementId, clientId } ) => {
-	if ( ! isVisible ) {
-		return null;
-	}
-
+export const IconDragHandle = ( { className, clientIds } ) => {
 	const dragHandleClassNames = classnames( 'editor-block-mover__control-drag-handle block-editor-block-mover__control-drag-handle', className );
 
 	return (
-		<BlockDraggable
-			clientId={ clientId }
-			blockElementId={ blockElementId }
-			onDragStart={ onDragStart }
-			onDragEnd={ onDragEnd }
-		>
+		<BlockDraggable clientIds={ clientIds }>
 			{
 				( { onDraggableStart, onDraggableEnd } ) => (
-					<div
+					<IconButton
+						icon={ dragHandle }
 						className={ dragHandleClassNames }
 						aria-hidden="true"
 						onDragStart={ onDraggableStart }
 						onDragEnd={ onDraggableEnd }
 						draggable
-					>
-						{ icon }
-					</div>
+					/>
 				) }
 		</BlockDraggable>
 	);

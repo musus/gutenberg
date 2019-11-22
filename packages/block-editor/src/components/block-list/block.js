@@ -35,7 +35,6 @@ import { compose, pure, ifCondition } from '@wordpress/compose';
  * Internal dependencies
  */
 import BlockEdit from '../block-edit';
-import BlockMover from '../block-mover';
 import BlockDropZone from '../block-drop-zone';
 import BlockInvalidWarning from './block-invalid-warning';
 import BlockCrashWarning from './block-crash-warning';
@@ -43,8 +42,6 @@ import BlockCrashBoundary from './block-crash-boundary';
 import BlockHtml from './block-html';
 import BlockBreadcrumb from './breadcrumb';
 import BlockContextualToolbar from './block-contextual-toolbar';
-import BlockMultiControls from './multi-controls';
-import BlockMobileToolbar from './block-mobile-toolbar';
 import BlockInsertionPoint from './insertion-point';
 import IgnoreNestedEvents from '../ignore-nested-events';
 import InserterWithShortcuts from '../inserter-with-shortcuts';
@@ -75,11 +72,10 @@ function BlockListBlock( {
 	isPartOfMultiSelection,
 	isFirstMultiSelected,
 	isTypingWithinBlock,
+	isDragging,
 	isCaretWithinFormattedText,
 	isEmptyDefaultBlock,
-	isMovable,
 	isParentOfSelectedBlock,
-	isDraggable,
 	isSelectionEnabled,
 	className,
 	name,
@@ -170,15 +166,6 @@ function BlockListBlock( {
 			hideHoverEffects();
 		}
 	} );
-
-	// Handling the dragging state
-	const [ isDragging, setBlockDraggingState ] = useState( false );
-	const onDragStart = () => {
-		setBlockDraggingState( true );
-	};
-	const onDragEnd = () => {
-		setBlockDraggingState( false );
-	};
 
 	// Handling the error state
 	const [ hasError, setErrorState ] = useState( false );
@@ -397,13 +384,6 @@ function BlockListBlock( {
 		! hasFixedToolbar &&
 		isHovered &&
 		! isEmptyDefaultBlock;
-	// We render block movers and block settings to keep them tabbale even if hidden
-	const shouldRenderMovers =
-		! isNavigationMode &&
-		isSelected &&
-		! showEmptyBlockSideInserter &&
-		! isPartOfMultiSelection &&
-		! isTypingWithinBlock;
 	const shouldShowBreadcrumb =
 		( isSelected && isNavigationMode ) ||
 		( ! isNavigationMode && ! isFocusMode && isHovered && ! isEmptyDefaultBlock );
@@ -415,7 +395,6 @@ function BlockListBlock( {
 			( isSelected && ( ! isTypingWithinBlock || isCaretWithinFormattedText ) ) ||
 			isFirstMultiSelected
 		);
-	const shouldShowMobileToolbar = ! isNavigationMode && shouldAppearSelected;
 
 	// Insertion point can only be made visible if the block is at the
 	// the extent of a multi-selection, or not in a multi-selection.
@@ -451,20 +430,6 @@ function BlockListBlock( {
 		};
 	}
 	const blockElementId = `block-${ clientId }`;
-	const blockMover = (
-		<BlockMover
-			clientIds={ clientId }
-			blockElementId={ blockElementId }
-			isHidden={ ! isSelected }
-			isDraggable={
-				isDraggable !== false &&
-				( ! isPartOfMultiSelection && isMovable )
-			}
-			onDragStart={ onDragStart }
-			onDragEnd={ onDragEnd }
-			__experimentalOrientation={ moverDirection }
-		/>
-	);
 
 	// We wrap the BlockEdit component in a div that hides it when editing in
 	// HTML mode. This allows us to render all of the ancillary pieces
@@ -525,19 +490,12 @@ function BlockListBlock( {
 				clientId={ clientId }
 				rootClientId={ rootClientId }
 			/>
-			{ isFirstMultiSelected && (
-				<BlockMultiControls
-					rootClientId={ rootClientId }
-					moverDirection={ moverDirection }
-				/>
-			) }
 			<div
 				className={ classnames(
 					'editor-block-list__block-edit block-editor-block-list__block-edit',
 					{ 'has-mover-inside': moverDirection === 'horizontal' },
 				) }
 			>
-				{ shouldRenderMovers && ( moverDirection === 'vertical' ) && blockMover }
 				{ shouldShowBreadcrumb && (
 					<BlockBreadcrumb
 						clientId={ clientId }
@@ -577,7 +535,6 @@ function BlockListBlock( {
 						{ isValid && mode === 'html' && (
 							<BlockHtml clientId={ clientId } />
 						) }
-						{ shouldRenderMovers && ( moverDirection === 'horizontal' ) && blockMover }
 						{ ! isValid && [
 							<BlockInvalidWarning
 								key="invalid-warning"
@@ -589,9 +546,6 @@ function BlockListBlock( {
 						] }
 					</BlockCrashBoundary>
 					{ !! hasError && <BlockCrashWarning /> }
-					{ shouldShowMobileToolbar && (
-						<BlockMobileToolbar clientId={ clientId } moverDirection={ moverDirection } />
-					) }
 				</IgnoreNestedEvents>
 			</div>
 			{ showInserterShortcuts && (
@@ -625,6 +579,7 @@ const applyWithSelect = withSelect(
 			isBlockMultiSelected,
 			isFirstMultiSelectedBlock,
 			isTyping,
+			isDraggingBlocks,
 			isCaretWithinFormattedText,
 			getBlockMode,
 			isSelectionEnabled,
@@ -644,6 +599,7 @@ const applyWithSelect = withSelect(
 		const isParentOfSelectedBlock = hasSelectedInnerBlock( clientId, true );
 		const index = getBlockIndex( clientId, rootClientId );
 		const blockOrder = getBlockOrder( rootClientId );
+		const isPartOfMultiSelection = isBlockMultiSelected( clientId ) || isAncestorMultiSelected( clientId );
 
 		// The fallback to `{}` is a temporary fix.
 		// This function should never be called when a block is not present in the state.
@@ -651,8 +607,7 @@ const applyWithSelect = withSelect(
 		const { name, attributes, isValid } = block || {};
 
 		return {
-			isPartOfMultiSelection:
-				isBlockMultiSelected( clientId ) || isAncestorMultiSelected( clientId ),
+			isDragging: isDraggingBlocks() && ( isSelected || isPartOfMultiSelection ),
 			isFirstMultiSelected: isFirstMultiSelectedBlock( clientId ),
 			// We only care about this prop when the block is selected
 			// Thus to avoid unnecessary rerenders we avoid updating the prop if the block is not selected.
@@ -664,12 +619,12 @@ const applyWithSelect = withSelect(
 			initialPosition: isSelected ? getSelectedBlocksInitialCaretPosition() : null,
 			isEmptyDefaultBlock:
 				name && isUnmodifiedDefaultBlock( { name, attributes } ),
-			isMovable: 'all' !== templateLock,
 			isLocked: !! templateLock,
 			isFocusMode: focusMode && isLargeViewport,
 			hasFixedToolbar: hasFixedToolbar && isLargeViewport,
 			isLast: index === blockOrder.length - 1,
 			isNavigationMode: isNavigationMode(),
+			isPartOfMultiSelection,
 			isRTL,
 
 			// Users of the editor.BlockListBlock filter used to be able to access the block prop

@@ -1,56 +1,54 @@
 /**
  * WordPress dependencies
  */
-import { withSelect } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Internal dependencies
  */
+import BlockMover from '../block-mover';
 import BlockSwitcher from '../block-switcher';
-import MultiBlocksSwitcher from '../block-switcher/multi-blocks-switcher';
 import BlockControls from '../block-controls';
 import BlockFormatControls from '../block-format-controls';
 import BlockSettingsMenu from '../block-settings-menu';
 
-function BlockToolbar( { blockClientIds, isValid, mode } ) {
-	if ( blockClientIds.length === 0 ) {
+function BlockToolbar( { moverDirection } ) {
+	const { blockIds, isValid, mode } = useSelect( ( select ) => {
+		const {
+			getBlockMode,
+			getSelectedBlockClientIds,
+			isBlockValid,
+		} = select( 'core/block-editor' );
+		const blockClientIds = getSelectedBlockClientIds();
+		return {
+			blockIds: blockClientIds,
+			isValid: blockClientIds.length === 1 ? isBlockValid( blockClientIds[ 0 ] ) : null,
+			mode: blockClientIds.length === 1 ? getBlockMode( blockClientIds[ 0 ] ) : null,
+		};
+	} );
+
+	if ( blockIds.length === 0 ) {
 		return null;
 	}
-
-	if ( blockClientIds.length > 1 ) {
-		return (
-			<div className="editor-block-toolbar block-editor-block-toolbar">
-				<MultiBlocksSwitcher />
-				<BlockSettingsMenu clientIds={ blockClientIds } />
-			</div>
-		);
-	}
+	const shouldShowVisualToolbar = isValid && mode === 'visual';
+	const isMultiToolbar = blockIds.length > 1;
 
 	return (
 		<div className="editor-block-toolbar block-editor-block-toolbar">
-			{ mode === 'visual' && isValid && (
+			<BlockMover
+				clientIds={ blockIds }
+				__experimentalOrientation={ moverDirection }
+			/>
+			{ ( shouldShowVisualToolbar || isMultiToolbar ) && <BlockSwitcher clientIds={ blockIds } /> }
+			{ shouldShowVisualToolbar && ! isMultiToolbar && (
 				<>
-					<BlockSwitcher clientIds={ blockClientIds } />
 					<BlockControls.Slot bubblesVirtually className="block-editor-block-toolbar__slot" />
 					<BlockFormatControls.Slot bubblesVirtually className="block-editor-block-toolbar__slot" />
 				</>
 			) }
-			<BlockSettingsMenu clientIds={ blockClientIds } />
+			<BlockSettingsMenu clientIds={ blockIds } />
 		</div>
 	);
 }
 
-export default withSelect( ( select ) => {
-	const {
-		getBlockMode,
-		getSelectedBlockClientIds,
-		isBlockValid,
-	} = select( 'core/block-editor' );
-	const blockClientIds = getSelectedBlockClientIds();
-
-	return {
-		blockClientIds,
-		isValid: blockClientIds.length === 1 ? isBlockValid( blockClientIds[ 0 ] ) : null,
-		mode: blockClientIds.length === 1 ? getBlockMode( blockClientIds[ 0 ] ) : null,
-	};
-} )( BlockToolbar );
+export default BlockToolbar;

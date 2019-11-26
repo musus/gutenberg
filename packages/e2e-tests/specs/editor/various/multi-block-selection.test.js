@@ -203,4 +203,40 @@ describe( 'Multi-block selection', () => {
 
 		expect( await getEditedPostContent() ).toMatchSnapshot();
 	} );
+
+	it( 'should cut and paste', async () => {
+		await clickBlockAppender();
+		await page.keyboard.type( '1' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( '2' );
+		await pressKeyWithModifier( 'primary', 'a' );
+		await pressKeyWithModifier( 'primary', 'a' );
+		await pressKeyWithModifier( 'primary', 'x' );
+
+		expect( await getEditedPostContent() ).toMatchSnapshot();
+
+		await pressKeyWithModifier( 'primary', 'v' );
+
+		expect( await getEditedPostContent() ).toMatchSnapshot();
+	} );
+
+	it( 'should copy and paste', async () => {
+		await clickBlockAppender();
+		await page.keyboard.type( '1' );
+		await page.keyboard.press( 'Enter' );
+		await page.keyboard.type( '2' );
+		await pressKeyWithModifier( 'primary', 'a' );
+		await pressKeyWithModifier( 'primary', 'a' );
+		await pressKeyWithModifier( 'primary', 'c' );
+
+		expect( await getEditedPostContent() ).toMatchSnapshot();
+
+		await page.keyboard.press( 'Backspace' );
+
+		expect( await getEditedPostContent() ).toMatchSnapshot();
+
+		await pressKeyWithModifier( 'primary', 'v' );
+
+		expect( await getEditedPostContent() ).toMatchSnapshot();
+	} );
 } );

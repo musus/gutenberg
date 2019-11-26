@@ -3,9 +3,14 @@
  */
 import { Draggable } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
+import { useEffect, useRef } from '@wordpress/element';
 
 const BlockDraggable = ( { children, clientIds } ) => {
-	const { srcRootClientId, index, isDraggable } = useSelect( ( select ) => {
+	const {
+		srcRootClientId,
+		index,
+		isDraggable,
+	} = useSelect( ( select ) => {
 		const {
 			getBlockIndex,
 			getBlockRootClientId,
@@ -20,7 +25,17 @@ const BlockDraggable = ( { children, clientIds } ) => {
 			isDraggable: clientIds.length === 1 && 'all' !== templateLock,
 		};
 	}, [ clientIds ] );
+	const isDragging = useRef( false );
 	const { startDraggingBlocks, stopDraggingBlocks } = useDispatch( 'core/block-editor' );
+
+	// Stop dragging blocks if the block draggable is unmounted
+	useEffect( () => {
+		return () => {
+			if ( isDragging.current ) {
+				stopDraggingBlocks();
+			}
+		};
+	}, [] );
 
 	if ( ! isDraggable ) {
 		return null;
@@ -38,8 +53,14 @@ const BlockDraggable = ( { children, clientIds } ) => {
 		<Draggable
 			elementId={ blockElementId }
 			transferData={ transferData }
-			onDragStart={ startDraggingBlocks }
-			onDragEnd={ stopDraggingBlocks }
+			onDragStart={ () => {
+				startDraggingBlocks();
+				isDragging.current = true;
+			} }
+			onDragEnd={ () => {
+				stopDraggingBlocks();
+				isDragging.current = false;
+			} }
 		>
 			{
 				( { onDraggableStart, onDraggableEnd } ) => {

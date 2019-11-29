@@ -393,7 +393,7 @@ function BlockListBlock( {
 
 	const onMouseLeave = () => {
 		if ( isPointerDown.current ) {
-			onSelectionStart( clientId );
+			onSelectionStart();
 		}
 
 		hideHoverEffects();

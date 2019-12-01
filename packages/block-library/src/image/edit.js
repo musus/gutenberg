@@ -55,7 +55,6 @@ import { speak } from '@wordpress/a11y';
 import { createUpgradedEmbedBlock } from '../embed/util';
 import icon, { editImageIcon } from './icon';
 import ImageSize from './image-size';
-import { getUpdatedLinkTargetSettings } from './utils';
 /**
  * Module constants
  */
@@ -260,11 +259,6 @@ export class ImageEdit extends Component {
 	onSetTitle( value ) {
 		// This is the HTML title attribute, separate from the media object title
 		this.props.setAttributes( { title: value } );
-	}
-
-	onSetNewTab( value ) {
-		const updatedLinkTarget = getUpdatedLinkTargetSettings( value, this.props.attributes );
-		this.props.setAttributes( updatedLinkTarget );
 	}
 
 	onFocusCaption() {

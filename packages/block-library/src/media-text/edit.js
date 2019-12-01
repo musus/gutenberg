@@ -8,6 +8,8 @@ import { get } from 'lodash';
  * WordPress dependencies
  */
 import { __, _x } from '@wordpress/i18n';
+import { compose } from '@wordpress/compose';
+import { withSelect } from '@wordpress/data';
 import {
 	BlockControls,
 	BlockVerticalAlignmentToolbar,
@@ -117,7 +119,6 @@ class MediaTextEdit extends Component {
 	renderMediaArea() {
 		const { attributes } = this.props;
 		const { mediaAlt, mediaId, mediaPosition, mediaType, mediaUrl, mediaWidth, imageFill, focalPoint } = attributes;
-
 		return (
 			<MediaContainer
 				className="block-library-media-text__media-container"
@@ -146,7 +147,6 @@ class MediaTextEdit extends Component {
 			mediaWidth,
 			verticalAlignment,
 			mediaUrl,
-			mediaLink,
 			imageFill,
 			focalPoint,
 			rel,
@@ -257,8 +257,8 @@ class MediaTextEdit extends Component {
 							onChangeUrl={ this.onSetHref }
 							linkDestination={ linkDestination }
 							mediaType={ mediaType }
-							mediaUrl={ mediaUrl }
-							mediaLink={ mediaLink }
+							mediaUrl={ this.props.image && this.props.image.source_url }
+							mediaLink={ this.props.image && this.props.image.link }
 							linkTarget={ linkTarget }
 							linkClass={ linkClass }
 							rel={ rel }
@@ -277,4 +277,13 @@ class MediaTextEdit extends Component {
 	}
 }
 
-export default withColors( 'backgroundColor' )( MediaTextEdit );
+export default compose( [
+	withColors( 'backgroundColor' ),
+	withSelect( ( select, props ) => {
+		const { getMedia } = select( 'core' );
+		const { attributes: { mediaId }, isSelected } = props;
+		return {
+			image: mediaId && isSelected ? getMedia( mediaId ) : null,
+		};
+	} ),
+] )( MediaTextEdit );

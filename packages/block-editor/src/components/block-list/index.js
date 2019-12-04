@@ -6,7 +6,7 @@ import classnames from 'classnames';
 /**
  * WordPress dependencies
  */
-import { useEffect, useRef } from '@wordpress/element';
+import { useEffect, useRef, useCallback } from '@wordpress/element';
 import { AsyncModeProvider, useSelect, useDispatch } from '@wordpress/data';
 
 /**
@@ -146,61 +146,64 @@ function BlockList( {
 
 		selection.removeAllRanges();
 		selection.addRange( range );
-	} );
-
-	const setSelection = () => {
-		const selection = window.getSelection();
-
-		// If no selection is found, end multi selection.
-		if ( ! selection.rangeCount || selection.isCollapsed ) {
-			stopMultiSelect();
-			return;
-		}
-
-		let { focusNode } = selection;
-		let clientId;
-
-		// Find the client ID of the block where the selection ends.
-		do {
-			focusNode = focusNode.parentElement;
-		} while (
-			focusNode &&
-			! ( clientId = focusNode.getAttribute( 'data-block' ) )
-		);
-
-		// If the final selection doesn't leave the block, there is no multi
-		// selection.
-		if ( selectedBlockClientId === clientId ) {
-			stopMultiSelect();
-			return;
-		}
-
-		multiSelect( selectedBlockClientId, clientId );
-		stopMultiSelect();
-	};
+	}, [
+		hasMultiSelection,
+		multiSelectedBlockClientIds,
+		blockClientIds,
+		ref.current,
+	] );
 
 	/**
 	 * Handles a mouseup event to end the current mouse multi-selection.
 	 */
-	const onSelectionEnd = () => {
+	const onSelectionEnd = useCallback( () => {
 		// Equivalent to attaching the listener once.
 		window.removeEventListener( 'mouseup', onSelectionEnd );
 		// The browser selection won't have updated yet at this point, so wait
 		// until the next animation frame to get the browser selection.
-		rafId.current = window.requestAnimationFrame( setSelection );
-	};
+		rafId.current = window.requestAnimationFrame( () => {
+			const selection = window.getSelection();
+
+			// If no selection is found, end multi selection.
+			if ( ! selection.rangeCount || selection.isCollapsed ) {
+				stopMultiSelect();
+				return;
+			}
+
+			let { focusNode } = selection;
+			let clientId;
+
+			// Find the client ID of the block where the selection ends.
+			do {
+				focusNode = focusNode.parentElement;
+			} while (
+				focusNode &&
+				! ( clientId = focusNode.getAttribute( 'data-block' ) )
+			);
+
+			// If the final selection doesn't leave the block, there is no multi
+			// selection.
+			if ( selectedBlockClientId === clientId ) {
+				stopMultiSelect();
+				return;
+			}
+
+			multiSelect( selectedBlockClientId, clientId );
+			stopMultiSelect();
+		} );
+	}, [ stopMultiSelect, multiSelect, selectedBlockClientId ] );
 
 	// Only clean up when unmounting, these are added and cleaned up elsewhere.
 	useEffect( () => () => {
 		window.removeEventListener( 'mouseup', onSelectionEnd );
 		window.cancelAnimationFrame( rafId.current );
-	} );
+	}, [ onSelectionEnd ] );
 
 	/**
 	 * Binds event handlers to the document for tracking a pending multi-select
 	 * in response to a mousedown event occurring in a rendered block.
 	 */
-	const onSelectionStart = () => {
+	const onSelectionStart = useCallback( () => {
 		if ( ! isSelectionEnabled ) {
 			return;
 		}
@@ -222,7 +225,7 @@ function BlockList( {
 		// remove the contenteditable attributes manually.
 		Array.from( ref.current.querySelectorAll( '.rich-text' ) )
 			.forEach( ( node ) => node.removeAttribute( 'contenteditable' ) );
-	};
+	}, [ isSelectionEnabled, startMultiSelect, ref.current, onSelectionEnd ] );
 
 	return (
 		<div

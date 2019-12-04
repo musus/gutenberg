@@ -150,7 +150,6 @@ function BlockList( {
 		hasMultiSelection,
 		multiSelectedBlockClientIds,
 		blockClientIds,
-		ref.current,
 	] );
 
 	/**
@@ -225,7 +224,7 @@ function BlockList( {
 		// remove the contenteditable attributes manually.
 		Array.from( ref.current.querySelectorAll( '.rich-text' ) )
 			.forEach( ( node ) => node.removeAttribute( 'contenteditable' ) );
-	}, [ isSelectionEnabled, startMultiSelect, ref.current, onSelectionEnd ] );
+	}, [ isSelectionEnabled, startMultiSelect, onSelectionEnd ] );
 
 	return (
 		<div

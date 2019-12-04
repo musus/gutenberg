@@ -64,7 +64,7 @@ function BlockList( {
 	isDraggable,
 	renderAppender,
 } ) {
-	const selector = ( select ) => {
+	function selector( select ) {
 		const {
 			getBlockOrder,
 			isSelectionEnabled,
@@ -88,7 +88,8 @@ function BlockList( {
 				getGlobalBlockCount() <= BLOCK_ANIMATION_THRESHOLD
 			),
 		};
-	};
+	}
+
 	const {
 		blockClientIds,
 		isSelectionEnabled,

@@ -252,7 +252,7 @@ function BlockListBlock( {
 		return () => {
 			wrapper.current.removeEventListener( 'dragstart', preventDrag );
 		};
-	}, [ wrapper.current ] );
+	}, [] );
 
 	// Focus the selected block's wrapper or inner input on mount and update
 	const isMounting = useRef( true );

@@ -21,7 +21,6 @@ import { createBlock } from '@wordpress/blocks';
 import { withSelect, withDispatch } from '@wordpress/data';
 import {
 	Button,
-	CheckboxControl,
 	PanelBody,
 	Placeholder,
 	Spinner,
@@ -39,12 +38,10 @@ import BlockNavigationList from './block-navigation-list';
 import BlockColorsStyleSelector from './block-colors-selector';
 
 function Navigation( {
-	attributes,
 	clientId,
 	pages,
 	isRequestingPages,
 	hasResolvedPages,
-	setAttributes,
 	hasExistingNavItems,
 	updateNavItemBlocks,
 } ) {
@@ -145,18 +142,6 @@ function Navigation( {
 			</BlockControls>
 			{ navigatorModal }
 			<InspectorControls>
-				{ hasPages && (
-					<PanelBody
-						title={ __( 'Navigation Settings' ) }
-					>
-						<CheckboxControl
-							value={ attributes.automaticallyAdd }
-							onChange={ ( automaticallyAdd ) => setAttributes( { automaticallyAdd } ) }
-							label={ __( 'Automatically add new pages' ) }
-							help={ __( 'Automatically add new top level pages to this navigation.' ) }
-						/>
-					</PanelBody>
-				) }
 				<PanelBody
 					title={ __( 'Navigation Structure' ) }
 				>

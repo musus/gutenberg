@@ -245,7 +245,7 @@ class MediaTextEdit extends Component {
 						onChange={ onVerticalAlignmentChange }
 						value={ verticalAlignment }
 					/>
-					{ mediaType === 'image' && ( <Toolbar>
+					{ mediaType === 'image' && ( <ToolbarGroup>
 						<ImageURLInputUI
 							url={ href || '' }
 							onChangeUrl={ this.onSetHref }
@@ -257,7 +257,7 @@ class MediaTextEdit extends Component {
 							linkClass={ linkClass }
 							rel={ rel }
 						/>
-					</Toolbar> ) }
+					</ToolbarGroup> ) }
 				</BlockControls>
 				<div className={ classNames } style={ style } >
 					{ this.renderMediaArea() }

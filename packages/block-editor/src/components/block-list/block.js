@@ -455,7 +455,7 @@ function BlockListBlock( {
 
 	// Insertion point can only be made visible if the block is at the
 	// the extent of a multi-selection, or not in a multi-selection.
-	const shouldShowInsertionPoint = ! isMultiSelecting && isBlockHovered && (
+	const shouldShowInsertionPoint = ! isMultiSelecting && (
 		( isPartOfMultiSelection && isFirstMultiSelected ) ||
 		! isPartOfMultiSelection
 	);
